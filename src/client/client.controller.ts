@@ -8,8 +8,10 @@ import { ClientService } from './client.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { Client } from './schemas/client.schema';
 import { Types } from 'mongoose';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('clients') // Rotas: /clients
+@ApiBearerAuth('access-token')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADM_GERAL', 'MODERADOR', 'CORRETOR') // Todos os logados podem acessar
 export class ClientController {
@@ -20,8 +22,12 @@ export class ClientController {
         @Body(new ValidationPipe()) createClientDto: CreateClientDto,
         @Request() req
     ): Promise<Client> {
-        // Injeta o companyId automaticamente do usuário logado
-        return this.clientService.create(createClientDto, new Types.ObjectId(req.user.companyId));
+        // CORREÇÃO: Passar ownerUserId (usuário logado)
+        return this.clientService.create(
+            createClientDto,
+            new Types.ObjectId(req.user.companyId),
+            new Types.ObjectId(req.user.userId) // ← userId do usuário logado
+        );
     }
 
     @Get()

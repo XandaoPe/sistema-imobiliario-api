@@ -5,10 +5,12 @@ import { CreateCompanyDto } from './dto/create-company.dto'; // Importa o DTO
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/shared/guards/roles.guard';
 import { Roles } from 'src/shared/decorators/roles.decorator';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('companies')
+@ApiBearerAuth('access-token')
 @UseGuards(JwtAuthGuard, RolesGuard) // Aplica ambos os guards no nível do controlador
-@Roles('ADM_GERAL') // Apenas ADM_GERAL pode acessar TODAS as rotas aqui
+// @Roles('ADM_GERAL') // Apenas ADM_GERAL pode acessar TODAS as rotas aqui
 export class CompanyController {
     constructor(private readonly companyService: CompanyService) { }
 

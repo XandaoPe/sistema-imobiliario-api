@@ -12,9 +12,12 @@ export class PropertyService {
         @InjectModel(Property.name) private propertyModel: Model<PropertyDocument>,
     ) { }
 
-    // Este método aceita um companyId opcional para filtragem
     async findAll(companyId?: Types.ObjectId): Promise<Property[]> {
-        const filter = companyId ? { companyId } : {}; // Aplica filtro se companyId existir
+        if (!companyId) {
+            console.log('👑 ADM_GERAL ou sem companyId - retornando TODAS as propriedades');
+            return this.propertyModel.find().exec(); // ← DEVE RETORNAR TUDO
+        }
+        const filter = { companyId };
         return this.propertyModel.find(filter).exec();
     }
 
@@ -33,19 +36,33 @@ export class PropertyService {
         return this.propertyModel.findOne({ _id: id, status: 'disponivel', isActive: true }).exec();
     }
 
-    // Cria um imóvel, exigindo o companyId do contexto logado
-    async create(createPropertyDto: CreatePropertyDto, companyId: Types.ObjectId): Promise<Property> {
+    // Cria um imóvel
+    async create(createPropertyDto: any, companyId: Types.ObjectId): Promise<Property> {
+        console.log('🏗️ Criando propriedade no service:', createPropertyDto);
+
         const createdProperty = new this.propertyModel({
             ...createPropertyDto,
-            companyId: companyId, // INJETA o ID da imobiliária logada
-            ownerUserId: null, // Pode ser preenchido depois
+            companyId: companyId,
         });
-        return createdProperty.save();
+
+        const result = await createdProperty.save();
+        console.log('✅ Propriedade criada com sucesso:', result._id);
+        return result;
     }
 
     // Implemente findOne, update e delete, sempre verificando o companyId
     async findOne(id: string, companyId?: Types.ObjectId): Promise<Property> {
         const filter = companyId ? { _id: id, companyId } : { _id: id };
         return this.propertyModel.findOne(filter).exec();
+    }
+
+    async update(id: string, updatePropertyDto: any, companyId?: Types.ObjectId): Promise<Property> {
+        const filter = companyId ? { _id: id, companyId } : { _id: id };
+        return this.propertyModel.findOneAndUpdate(filter, updatePropertyDto, { new: true }).exec();
+    }
+
+    async delete(id: string, companyId?: Types.ObjectId): Promise<Property> {
+        const filter = companyId ? { _id: id, companyId } : { _id: id };
+        return this.propertyModel.findOneAndDelete(filter).exec();
     }
 }

@@ -12,7 +12,18 @@ export type UserDocument = User & Document;
     collection: 'users',
 })
 export class User {
-    @Prop({ required: true, unique: true })
+
+    @Prop({
+        required: true,
+        unique: true,
+        validate: {
+            validator: async function (email: string) {
+                const count = await this.constructor.countDocuments({ email });
+                return count === 0;
+            },
+            message: 'Email já está em uso'
+        }
+    })
     email: string;
 
     // A senha será hashed antes de ser salva
@@ -41,6 +52,8 @@ export class User {
     // required: false porque o ADM_GERAL não pertence a uma imobiliária específica
     @Prop({ type: Types.ObjectId, ref: 'Company', required: false })
     companyId: Types.ObjectId;
+
+    
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

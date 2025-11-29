@@ -1,9 +1,8 @@
-// src/permission/permission.module.ts
-
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PermissionService } from './permission.service';
 import { Permission, PermissionSchema } from './schemas/permission.schema';
+import { PermissionController } from './permission.controller'; // ← Adicionar
 
 @Module({
   imports: [
@@ -12,6 +11,7 @@ import { Permission, PermissionSchema } from './schemas/permission.schema';
     ]),
   ],
   providers: [PermissionService],
-  exports: [PermissionService] // Exportamos para usar em PropertyService e ClientService
+  controllers: [PermissionController], // ← Adicionar
+  exports: [PermissionService]
 })
 export class PermissionModule { }

@@ -11,7 +11,8 @@ import {
     ValidationPipe,
     UseInterceptors,       // Importe UseInterceptors
     UploadedFile,         // Importe UploadedFile
-    NotFoundException     // Importe NotFoundException
+    NotFoundException,     // Importe NotFoundException
+    BadRequestException
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { PropertyService } from './property.service';
@@ -42,24 +43,43 @@ export class PropertyController {
 
     @Post()
     @ApiOperation({ summary: 'Cria um novo imóvel (requer autenticação)' })
-    @ApiConsumes('multipart/form-data') // Indica ao Swagger que o formato é multipart/form-data
-   // 2. Aplica o Interceptor para processar o campo 'image' do formulário
+    @ApiConsumes('multipart/form-data')
     @UseInterceptors(FileInterceptor('image', { storage }))
     async create(
-        @Body(new ValidationPipe()) createPropertyDto: CreatePropertyDto,
+        @Body(new ValidationPipe({ transform: true })) createPropertyDto: CreatePropertyDto, // ← transform: true
         @Request() req,
-        @UploadedFile() file: Express.Multer.File // 3. Recebe o objeto do arquivo processado
+        @UploadedFile() file: Express.Multer.File
     ) {
+        console.log('🟢 RECEBENDO CRIAÇÃO DE IMÓVEL');
+        console.log('📦 Dados recebidos:', createPropertyDto);
+        console.log('📦 Tipo do price:', typeof createPropertyDto.price);
+        console.log('📁 Arquivo:', file ? `Sim - ${file.originalname}` : 'Não');
+
         if (!file) {
-            // Se nenhuma imagem for enviada, lançamos um erro
             throw new NotFoundException('A imagem principal é obrigatória para o cadastro do imóvel.');
         }
 
-        // 4. Adiciona o caminho local do arquivo ao DTO para salvar no DB
-        // Na produção, este caminho seria a URL pública do seu serviço de cloud (S3, Azure Blob, etc.)
-        createPropertyDto.images = [file.path];
+        // Garante que o price é número (backup)
+        const price = Number(createPropertyDto.price);
+        if (isNaN(price)) {
+            throw new BadRequestException('Preço deve ser um número válido');
+        }
 
-        return this.propertyService.create(createPropertyDto, new Types.ObjectId(req.user.companyId));
+        // Prepara os dados para salvar
+        const propertyData = {
+            title: createPropertyDto.title,
+            description: createPropertyDto.description,
+            address: createPropertyDto.address,
+            price: price, // ← USA O NUMBER CONVERTIDO
+            status: createPropertyDto.status || 'disponivel',
+            images: [file.path],
+            companyId: new Types.ObjectId(req.user.companyId),
+            ownerUserId: null
+        };
+
+        console.log('💾 Dados para salvar:', propertyData);
+
+        return this.propertyService.create(propertyData, new Types.ObjectId(req.user.companyId));
     }
 
     @Get()

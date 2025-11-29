@@ -15,22 +15,33 @@ export class Client {
     @Prop({ required: true })
     lastName: string;
 
-    @Prop({ required: true, unique: true })
+    // No user.schema.ts e client.schema.ts
+    @Prop({
+        required: true,
+        unique: true,
+        validate: {
+            validator: async function (email: string) {
+                const count = await this.constructor.countDocuments({ email });
+                return count === 0;
+            },
+            message: 'Email já está em uso'
+        }
+    })
     email: string;
 
     @Prop({ required: true })
     phone: string;
 
     @Prop()
-    document: string; // CPF/CNPJ opcional
+    document: string;
 
     // CHAVE PARA ISOLAMENTO: Link obrigatório para a Imobiliária
     @Prop({ type: Types.ObjectId, ref: 'Company', required: true })
     companyId: Types.ObjectId;
-    
+
+    // CORREÇÃO: Adicionar ownerUserId (obrigatório) - VERIFIQUE SE EXISTE!
     @Prop({ type: Types.ObjectId, ref: 'User', required: true })
     ownerUserId: Types.ObjectId;
 }
-
 
 export const ClientSchema = SchemaFactory.createForClass(Client);
