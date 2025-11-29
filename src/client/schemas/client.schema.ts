@@ -27,6 +27,10 @@ export class Client {
     // CHAVE PARA ISOLAMENTO: Link obrigatório para a Imobiliária
     @Prop({ type: Types.ObjectId, ref: 'Company', required: true })
     companyId: Types.ObjectId;
+    
+    @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+    ownerUserId: Types.ObjectId;
 }
+
 
 export const ClientSchema = SchemaFactory.createForClass(Client);

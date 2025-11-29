@@ -26,9 +26,14 @@ export class ClientController {
 
     @Get()
     async findAll(@Request() req): Promise<Client[]> {
-        // ADM Geral vê todos, outros perfis só vêem os da sua imobiliária
+        // CORREÇÃO AQUI: Passamos userId e userRole para o service
         const companyIdToFilter = req.user.role === 'ADM_GERAL' ? undefined : new Types.ObjectId(req.user.companyId);
-        return this.clientService.findAll(companyIdToFilter);
+
+        return this.clientService.findAll(
+            new Types.ObjectId(req.user.userId), // Argumento 1: userId
+            req.user.role,                        // Argumento 2: userRole
+            companyIdToFilter                     // Argumento 3: companyIdToFilter
+        );
     }
 
     @Get(':id')

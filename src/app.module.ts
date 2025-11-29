@@ -13,6 +13,9 @@ import { AuthModule } from './auth/auth.module';
 import { PropertyModule } from './property/property.module';
 import { PropertyPublicController } from './property/property-public.controller';
 import { ClientModule } from './client/client.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+import { PermissionModule } from './permission/permission.module';
 
 @Module({
   imports: [
@@ -24,13 +27,21 @@ import { ClientModule } from './client/client.module';
       useFactory: async (configService: ConfigService) => ({
         uri: configService.get<string>('MONGODB_URI'),
       }),
-      inject: [ConfigService],
+      inject: 
+      [
+        ConfigService
+      ],
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'), // Serve arquivos da pasta /uploads na raiz
+      serveRoot: '/uploads', // Acessível via http://localhost:3000/uploads/...
     }),
     CompanyModule, // Adicione CompanyModule
     UserModule, 
     AuthModule, 
     PropertyModule,
-    ClientModule,   // Adicione UserModule
+    ClientModule,
+    PermissionModule,   // Adicione UserModule
   ],
   controllers: [AppController, AuthController, PropertyPublicController],
   providers: [AppService, AuthService],

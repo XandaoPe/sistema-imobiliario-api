@@ -5,11 +5,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Client, ClientDocument } from './schemas/client.schema';
 import { CreateClientDto } from './dto/create-client.dto';
+import { PermissionService } from 'src/permission/permission.service';
 
 @Injectable()
 export class ClientService {
     constructor(
         @InjectModel(Client.name) private clientModel: Model<ClientDocument>,
+        private permissionService: PermissionService, // Injete o serviço de permissões
+
     ) { }
 
     // Cria um cliente, exigindo o companyId do contexto logado
@@ -21,9 +24,23 @@ export class ClientService {
         return createdClient.save();
     }
 
-    // Busca todos os clientes para uma imobiliária específica (ou todos se ADM Geral)
-    async findAll(companyId?: Types.ObjectId): Promise<Client[]> {
-        const filter = companyId ? { companyId } : {};
+    async findAll(userId: Types.ObjectId, userRole: string, companyId?: Types.ObjectId): Promise<Client[]> {
+        if (userRole === 'ADM_GERAL') {
+            return this.clientModel.find().exec();
+        }
+
+        // Lógica complexa: Encontra clientes do próprio usuário OU clientes que foram compartilhados com ele
+        const sharedClientIds = await this.permissionService.getSharedEntityIds(userId, companyId, 'Client');
+
+        // Filtro OR: [Meus Clientes] OU [Clientes Compartilhados Comigo] E [Da Minha Empresa]
+        const filter = {
+            $or: [
+                { ownerUserId: userId }, // Precisamos adicionar ownerUserId ao schema Client (veja nota abaixo)
+                { _id: { $in: sharedClientIds } }
+            ],
+            companyId: companyId
+        };
+
         return this.clientModel.find(filter).exec();
     }
 
