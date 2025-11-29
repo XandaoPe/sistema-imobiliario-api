@@ -7,6 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { UserModule } from '../user/user.module';
+import { JwtStrategy } from './strategies/jwt.strategy'; // Importe a estratégia
 
 @Module({
     imports: [
@@ -21,7 +22,7 @@ import { UserModule } from '../user/user.module';
             }),
         }),
     ],
-    providers: [AuthService], // AuthService consome JwtService e UserService
+    providers: [AuthService, JwtStrategy], // AuthService consome JwtService e UserService
     controllers: [AuthController],
     exports: [AuthService, JwtModule], // Opcional exportar JwtModule, mas garante que outros possam usar se necessário
 })

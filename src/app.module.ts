@@ -10,6 +10,7 @@ import { UserModule } from './user/user.module'; // Importe UserModule
 import { AuthService } from './auth/auth.service';
 import { AuthController } from './auth/auth.controller';
 import { AuthModule } from './auth/auth.module';
+import { PropertyModule } from './property/property.module';
 
 @Module({
   imports: [
@@ -25,7 +26,8 @@ import { AuthModule } from './auth/auth.module';
     }),
     CompanyModule, // Adicione CompanyModule
     UserModule, 
-    AuthModule,   // Adicione UserModule
+    AuthModule, 
+    PropertyModule,   // Adicione UserModule
   ],
   controllers: [AppController, AuthController],
   providers: [AppService, AuthService],
