@@ -12,6 +12,7 @@ import { AuthController } from './auth/auth.controller';
 import { AuthModule } from './auth/auth.module';
 import { PropertyModule } from './property/property.module';
 import { PropertyPublicController } from './property/property-public.controller';
+import { ClientModule } from './client/client.module';
 
 @Module({
   imports: [
@@ -28,7 +29,8 @@ import { PropertyPublicController } from './property/property-public.controller'
     CompanyModule, // Adicione CompanyModule
     UserModule, 
     AuthModule, 
-    PropertyModule,   // Adicione UserModule
+    PropertyModule,
+    ClientModule,   // Adicione UserModule
   ],
   controllers: [AppController, AuthController, PropertyPublicController],
   providers: [AppService, AuthService],
