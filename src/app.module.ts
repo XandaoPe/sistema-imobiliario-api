@@ -7,6 +7,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CompanyModule } from './company/company.module'; // Importe CompanyModule
 import { UserModule } from './user/user.module'; // Importe UserModule
+import { AuthService } from './auth/auth.service';
+import { AuthController } from './auth/auth.controller';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -21,10 +24,11 @@ import { UserModule } from './user/user.module'; // Importe UserModule
       inject: [ConfigService],
     }),
     CompanyModule, // Adicione CompanyModule
-    UserModule,    // Adicione UserModule
+    UserModule, 
+    AuthModule,   // Adicione UserModule
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController, AuthController],
+  providers: [AppService, AuthService],
 })
 export class AppModule { }
 
