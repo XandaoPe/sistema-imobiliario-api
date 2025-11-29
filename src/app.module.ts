@@ -11,6 +11,7 @@ import { AuthService } from './auth/auth.service';
 import { AuthController } from './auth/auth.controller';
 import { AuthModule } from './auth/auth.module';
 import { PropertyModule } from './property/property.module';
+import { PropertyPublicController } from './property/property-public.controller';
 
 @Module({
   imports: [
@@ -29,7 +30,7 @@ import { PropertyModule } from './property/property.module';
     AuthModule, 
     PropertyModule,   // Adicione UserModule
   ],
-  controllers: [AppController, AuthController],
+  controllers: [AppController, AuthController, PropertyPublicController],
   providers: [AppService, AuthService],
 })
 export class AppModule { }

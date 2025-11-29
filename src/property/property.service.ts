@@ -18,6 +18,21 @@ export class PropertyService {
         return this.propertyModel.find(filter).exec();
     }
 
+    // NOVO Método: Para a área pública (Landing Page)
+    async findPublicProperties(): Promise<Property[]> {
+        // Busca imóveis que estão 'disponivel' (ou o status que você definir)
+        // Ordena por data de criação (mais novos primeiro)
+        return this.propertyModel.find({ status: 'disponivel', isActive: true }) // Assume que isActive será adicionado ao schema
+            .sort({ createdAt: -1 })
+            .limit(20) // Limita a 20 resultados para a landing page (pode ser paginado depois)
+            .exec();
+    }
+
+    // NOVO Método: Para visualização pública de um único imóvel
+    async findPublicOne(id: string): Promise<Property | null> {
+        return this.propertyModel.findOne({ _id: id, status: 'disponivel', isActive: true }).exec();
+    }
+
     // Cria um imóvel, exigindo o companyId do contexto logado
     async create(createPropertyDto: CreatePropertyDto, companyId: Types.ObjectId): Promise<Property> {
         const createdProperty = new this.propertyModel({
