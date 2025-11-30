@@ -1,7 +1,8 @@
-import { Controller, Post, Body, UnauthorizedException, ValidationPipe } from '@nestjs/common';
+import { Controller, Post, Body, UnauthorizedException, ValidationPipe, Get, UseGuards, Request } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto'; // Importa o DTO
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @ApiTags('Autenticação') // Agrupa este controller na UI do Swagger
 @Controller('auth')
@@ -19,4 +20,19 @@ export class AuthController {
         }
         return this.authService.login(user);
     }
+
+    @Get('me')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth('access-token')
+    @ApiOperation({ summary: 'Retorna os dados do usuário logado' })
+    async getProfile(@Request() req) {
+        // O JwtStrategy já valida o token e adiciona os dados no req.user
+        return {
+            userId: req.user.userId,
+            email: req.user.email,
+            role: req.user.role,
+            companyId: req.user.companyId
+        };
+    }
+
 }

@@ -6,6 +6,13 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.enableCors({
+    origin: ['http://localhost:3000', 'http://127.0.0.1:3000'], // URLs do frontend
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    credentials: true,
+  });
+
   // Adiciona o ValidationPipe globalmente para todos os DTOs
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true, // Remove propriedades que não estão definidas no DTO
@@ -35,6 +42,6 @@ async function bootstrap() {
   SwaggerModule.setup('api-docs', app, document);
   // -------------------------------
 
-  await app.listen(3000);
+  await app.listen(5000);
 }
 bootstrap();

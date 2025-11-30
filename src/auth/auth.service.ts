@@ -14,29 +14,27 @@ export class AuthService {
     ) { }
 
     async validateUser(email: string, pass: string): Promise<any> {
-        const user = await this.userService.findByEmail(email);
+        console.log('🔐 Validando usuário:', email);
 
-        if (user && await bcrypt.compare(pass, user.passwordHash)) {
-            // Remove o hash da senha do objeto de retorno para segurança
-            const { passwordHash, ...result } = user;
-            return result;
+        const user = await this.userService.findByEmail(email);
+        console.log('👤 Usuário encontrado:', user ? 'SIM' : 'NÃO');
+
+        if (user) {
+            console.log('🔑 Comparando senha...');
+            const isPasswordValid = await bcrypt.compare(pass, user.passwordHash);
+            console.log('✅ Senha válida:', isPasswordValid);
+
+            if (isPasswordValid) {
+                const { passwordHash, ...result } = user;
+                console.log('🎯 Usuário validado com sucesso:', result.email, result.role);
+                return result;
+            }
         }
+
+        console.log('❌ Falha na validação - Credenciais inválidas');
         return null;
     }
 
-    // async login(user: any) {
-    //     // Payload do JWT: Inclui companyId e role para controle de acesso futuro
-    //     const payload = {
-    //         email: user.email,
-    //         sub: user._doc._id, // MongoDB _id
-    //         role: user.role,
-    //         companyId: user.companyId // A CHAVE DO NOSSO SISTEMA MULTI-TENANT
-    //     };
-
-    //     return {
-    //         access_token: this.jwtService.sign(payload),
-    //     };
-    // }
     async login(user: any) {
         console.log('👤 Dados do usuário no login:', user);
         

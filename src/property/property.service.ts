@@ -6,31 +6,91 @@ import { Model, Types } from 'mongoose';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { Property, PropertyDocument } from './schema/property.schema';
 
+export interface PaginatedProperties {
+    data: Property[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+}
 @Injectable()
 export class PropertyService {
     constructor(
         @InjectModel(Property.name) private propertyModel: Model<PropertyDocument>,
     ) { }
 
-    async findAll(companyId?: Types.ObjectId): Promise<Property[]> {
-        if (!companyId) {
-            console.log('👑 ADM_GERAL ou sem companyId - retornando TODAS as propriedades');
-            return this.propertyModel.find().exec(); // ← DEVE RETORNAR TUDO
+    // 🔥 MÉTODO ATUALIZADO COM PAGINAÇÃO
+    async findAll(
+        companyId?: Types.ObjectId,
+        page: number = 1,
+        limit: number = 10,
+        status?: string
+    ): Promise<PaginatedProperties> {
+        const filter: any = {};
+
+        if (companyId) {
+            filter.companyId = companyId;
         }
-        const filter = { companyId };
-        return this.propertyModel.find(filter).exec();
+
+        if (status && status !== 'all') {
+            filter.status = status;
+        }
+
+        const skip = (page - 1) * limit;
+
+        const [data, total] = await Promise.all([
+            this.propertyModel
+                .find(filter)
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .exec(),
+            this.propertyModel.countDocuments(filter)
+        ]);
+
+        const totalPages = Math.ceil(total / limit);
+
+        return {
+            data,
+            total,
+            page,
+            limit,
+            totalPages
+        };
     }
 
-    // NOVO Método: Para a área pública (Landing Page)
-    async findPublicProperties(): Promise<Property[]> {
-        // Busca imóveis que estão 'disponivel' (ou o status que você definir)
-        // Ordena por data de criação (mais novos primeiro)
-        return this.propertyModel.find({ status: 'disponivel', isActive: true }) // Assume que isActive será adicionado ao schema
-            .sort({ createdAt: -1 })
-            .limit(20) // Limita a 20 resultados para a landing page (pode ser paginado depois)
-            .exec();
-    }
+    // 🔥 MÉTODO PÚBLICO COM PAGINAÇÃO
+    async findPublicProperties(
+        page: number = 1,
+        limit: number = 12
+    ): Promise<PaginatedProperties> {
+        const filter = {
+            status: 'disponivel',
+            isActive: true
+        };
 
+        const skip = (page - 1) * limit;
+
+        const [data, total] = await Promise.all([
+            this.propertyModel
+                .find(filter)
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .exec(),
+            this.propertyModel.countDocuments(filter)
+        ]);
+
+        const totalPages = Math.ceil(total / limit);
+
+        return {
+            data,
+            total,
+            page,
+            limit,
+            totalPages
+        };
+    }
     // NOVO Método: Para visualização pública de um único imóvel
     async findPublicOne(id: string): Promise<Property | null> {
         return this.propertyModel.findOne({ _id: id, status: 'disponivel', isActive: true }).exec();

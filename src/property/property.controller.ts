@@ -12,7 +12,8 @@ import {
     UseInterceptors,       // Importe UseInterceptors
     UploadedFile,         // Importe UploadedFile
     NotFoundException,     // Importe NotFoundException
-    BadRequestException
+    BadRequestException,
+    Query
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { PropertyService } from './property.service';
@@ -22,7 +23,7 @@ import { Types } from 'mongoose';
 import { FileInterceptor } from '@nestjs/platform-express'; // Importe FileInterceptor
 import { diskStorage } from 'multer'; // Importe diskStorage
 import { extname } from 'path'; // Importe extname
-import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 // 1. Configuração de Armazenamento Local (Mover isso para fora do controller se preferir)
 const storage = diskStorage({
@@ -82,13 +83,23 @@ export class PropertyController {
         return this.propertyService.create(propertyData, new Types.ObjectId(req.user.companyId));
     }
 
+    // 🔥 ENDPOINT ATUALIZADO COM PAGINAÇÃO
     @Get()
     @ApiOperation({ summary: 'Lista imóveis da imobiliária do usuário logado' })
+    @ApiQuery({ name: 'page', required: false, type: Number, description: 'Página atual' })
+    @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Itens por página' })
+    @ApiQuery({ name: 'status', required: false, type: String, description: 'Filtrar por status' })
+    async findAll(
+        @Request() req,
+        @Query('page') page: number = 1,
+        @Query('limit') limit: number = 10,
+        @Query('status') status: string = 'all'
+    ) {
+        const companyIdToFilter = req.user.role === 'ADM_GERAL'
+            ? undefined
+            : new Types.ObjectId(req.user.companyId);
 
-    async findAll(@Request() req) {
-        // ... (lógica de findAll existente) ...
-        const companyIdToFilter = req.user.role === 'ADM_GERAL' ? undefined : new Types.ObjectId(req.user.companyId);
-        return this.propertyService.findAll(companyIdToFilter);
+        return this.propertyService.findAll(companyIdToFilter, page, limit, status);
     }
 
     @Get(':id')
